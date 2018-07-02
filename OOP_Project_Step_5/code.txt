@@ -1,0 +1,228 @@
+#include <iostream>
+#include <string>
+
+#define STR_LEN 100
+
+using std::cout;
+using std::cin;
+using std::endl;
+
+
+/* 
+ * Account 클래스 (Entity)
+ */
+
+class Account {
+private:
+	int accID; // 중복검사를 하지 않는다.
+	char* name;
+	int balance; // 입금 및 출금액 검사를 하지 않는다.
+public:
+	Account(const int, const char*, const int);
+	Account(const Account&);
+	~Account();
+	
+	int GetAccID() const;
+	char* GetName() const;
+	int GetBalance() const;
+
+	void Deposit(const int);
+	void Withdraw(const int);
+
+	void ShowAccountInfo() const;
+};
+
+Account::Account(const int accID, const char* name, const int balance)
+	: accID(accID), balance(balance)
+{
+	this->name = new char[strlen(name) + 1];
+	strcpy_s(this->name, strlen(name) + 1, name);
+}
+Account::Account(const Account& account)
+	: accID(account.accID), balance(account.balance)
+{
+	name = new char[strlen(account.name) + 1];
+	strcpy_s(name, strlen(account.name) + 1, account.name);
+}
+Account::~Account()
+{
+	delete[] name;
+}
+
+int Account::GetAccID() const { return accID; }
+char* Account::GetName() const { return name; }
+int Account::GetBalance() const { return balance; }
+
+void Account::Deposit(const int money) { balance += money; }
+void Account::Withdraw(const int money) { balance -= money; }
+
+void Account::ShowAccountInfo() const
+{
+	cout << "계좌ID: " << accID << '\n';
+	cout << "이 름: " << name << '\n';
+	cout << "잔 액: " << balance << "원\n";
+}
+
+/*
+ * AccountHandler 클래스 (Control)
+ */
+
+enum { CREATE = 1, DEPOSIT, WITHDRAW, SHOWINFO, EXIT };
+
+class AccountHandler {
+private:
+	Account * accountList[STR_LEN];
+	int accountNum;
+public:
+	AccountHandler();
+	~AccountHandler();
+	int ShowMenu() const; // 메뉴 출력
+	void customAccout(const int, const char*, const int);
+	void CreateAccout(); // 계좌 생성
+	void Deposit(); // 입금
+	void Withdraw(); // 출금
+	void ShowAccountList() const; // 계좌목록 출력
+};
+
+AccountHandler::AccountHandler(): accountNum(0) {}
+AccountHandler::~AccountHandler()
+{
+	for(int i = 0; i < accountNum; i++) {
+		delete accountList[i];
+	}
+}
+
+
+void AccountHandler::customAccout(const int accID, const char* name, const int money)
+{
+	accountList[accountNum++] = new Account(accID, name, money);
+}
+
+int AccountHandler::ShowMenu() const
+{
+	int ch = 0;
+	cout << "-----Menu-----\n";
+	cout << "1. 계좌 개설\n";
+	cout << "2. 입 금\n";
+	cout << "3. 출 금\n";
+	cout << "4. 계좌정보 전체 출력\n";
+	cout << "5. 프로그램 종료\n";
+	cout << "선택>> ";
+	cin >> ch;
+	return ch;
+}
+
+void AccountHandler::CreateAccout()
+{
+	int accID = 0;
+	char name[STR_LEN];
+	int balance = 0;
+
+	cout << "\n[계좌개설]\n";
+	cout << "계좌ID: "; cin >> accID;
+	cout << "이 름: "; cin >> name;
+	cout << "입금액: "; cin >> balance;
+	accountList[accountNum++] = new Account(accID, name, balance);
+}
+
+void AccountHandler::Deposit()
+{
+	int inputID = 0;
+	int inputMoney = 0;
+	int i;
+	cout << "\n[입 금]\n";
+	cout << "계좌ID: ";
+	cin >> inputID;
+	for(i = 0; i < accountNum; i++) {
+		if(accountList[i]->GetAccID() == inputID) {
+			break;
+		}
+	}
+	if(i == accountNum) {
+		cout << "올바른 계좌번호가 아닙니다.\n\n";
+		cout << "저장된 계좌번호목록\n";
+		for(int i = 0; i < accountNum; i++) {
+			cout << "계좌ID: " << accountList[i]->GetAccID() << '\n';
+		}
+		return Deposit();
+	}
+	cout << "이 름: " << accountList[i]->GetName() << '\n';
+	cout << "입금액: ";
+	cin >> inputMoney;
+	accountList[i]->Deposit(inputMoney);
+	cout << "입금완료.";
+}
+
+void AccountHandler::Withdraw()
+{
+	int inputID = 0;
+	int inputMoney = 0;
+	int i;
+	cout << "\n[출 금]\n";
+	cout << "계좌ID: ";
+	cin >> inputID;
+	for(i = 0; i < accountNum; i++) {
+		if(accountList[i]->GetAccID() == inputID) {
+			break;
+		}
+	}
+	if(i == accountNum) {
+		cout << "올바른 계좌번호가 아닙니다.\n";
+		for(int i = 0; i < accountNum; i++) {
+			cout << "계좌ID: " << accountList[i]->GetAccID() << '\n';
+		}
+		return Deposit();
+	}
+	cout << "이 름: " << accountList[i]->GetName() << '\n';
+	cout << "출금액(현재 잔액: " << accountList[i]->GetBalance() << "원): ";
+	cin >> inputMoney;
+	if(accountList[i]->GetBalance() >= inputMoney) {
+		accountList[i]->Withdraw(inputMoney);
+	}
+	else {
+		cout << "잔액이 부족합니다.(현재 잔액: " << accountList[i]->GetBalance() << "원)\n";
+		cout << "출금실패.\n";
+		return;
+	}
+	cout << "출금완료.\n";
+}
+
+void AccountHandler::ShowAccountList () const
+{
+	cout << "\n[전체 계좌목록]\n";
+	for(int i = 0; i < accountNum; i++) {
+		cout << '\n';
+		accountList[i]->ShowAccountInfo();
+	}
+}
+
+int main()
+{
+	AccountHandler manager;
+	manager.customAccout(111, "name1", 500);
+	manager.customAccout(112, "name2", 1000);
+	manager.customAccout(113, "name3", 5000);
+	while(true) {
+		switch(manager.ShowMenu()) {
+		case CREATE:
+			manager.CreateAccout();
+			break;
+		case DEPOSIT:
+			manager.Deposit();
+			break;
+		case WITHDRAW:
+			manager.Withdraw();
+			break;
+		case SHOWINFO:
+			manager.ShowAccountList();
+			break;
+		case EXIT:
+			cout << "프로그램을 종료합니다.\n";
+			return 0;
+		default:
+			break;
+		}
+		putchar('\n');
+	}
+	return 0;
+}
