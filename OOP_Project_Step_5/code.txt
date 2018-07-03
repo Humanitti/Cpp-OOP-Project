@@ -18,7 +18,7 @@ private:
 	char* name;
 	int balance; // 입금 및 출금액 검사를 하지 않는다.
 public:
-	Account(const int, const char*, const int);
+	Account(int, const char*, int);
 	Account(const Account&);
 	~Account();
 	
@@ -32,7 +32,7 @@ public:
 	void ShowAccountInfo() const;
 };
 
-Account::Account(const int accID, const char* name, const int balance)
+Account::Account(int accID, const char* name, int balance)
 	: accID(accID), balance(balance)
 {
 	this->name = new char[strlen(name) + 1];
@@ -77,8 +77,8 @@ public:
 	AccountHandler();
 	~AccountHandler();
 	int ShowMenu() const; // 메뉴 출력
-	void customAccout(const int, const char*, const int);
-	void CreateAccout(); // 계좌 생성
+	void customAccount(int, const char*, int);
+	void CreateAccount(); // 계좌 생성
 	void Deposit(); // 입금
 	void Withdraw(); // 출금
 	void ShowAccountList() const; // 계좌목록 출력
@@ -93,7 +93,7 @@ AccountHandler::~AccountHandler()
 }
 
 
-void AccountHandler::customAccout(const int accID, const char* name, const int money)
+void AccountHandler::customAccount(int accID, const char* name,int money)
 {
 	accountList[accountNum++] = new Account(accID, name, money);
 }
@@ -112,11 +112,10 @@ int AccountHandler::ShowMenu() const
 	return ch;
 }
 
-void AccountHandler::CreateAccout()
+void AccountHandler::CreateAccount()
 {
-	int accID = 0;
+	int accID = 0, balance = 0;
 	char name[STR_LEN];
-	int balance = 0;
 
 	cout << "\n[계좌개설]\n";
 	cout << "계좌ID: "; cin >> accID;
@@ -135,22 +134,19 @@ void AccountHandler::Deposit()
 	cin >> inputID;
 	for(i = 0; i < accountNum; i++) {
 		if(accountList[i]->GetAccID() == inputID) {
-			break;
+			cout << "이 름: " << accountList[i]->GetName() << '\n';
+			cout << "입금액: "; cin >> inputMoney;
+			accountList[i]->Deposit(inputMoney);
+			cout << "입금완료.\n";
+			return;
 		}
 	}
-	if(i == accountNum) {
-		cout << "올바른 계좌번호가 아닙니다.\n\n";
-		cout << "저장된 계좌번호목록\n";
-		for(int i = 0; i < accountNum; i++) {
-			cout << "계좌ID: " << accountList[i]->GetAccID() << '\n';
-		}
-		return Deposit();
+	cout << "올바른 계좌번호가 아닙니다.\n\n";
+	cout << "저장된 계좌번호목록\n";
+	for(int i = 0; i < accountNum; i++) {
+		cout << "계좌ID: " << accountList[i]->GetAccID() << '\n';
 	}
-	cout << "이 름: " << accountList[i]->GetName() << '\n';
-	cout << "입금액: ";
-	cin >> inputMoney;
-	accountList[i]->Deposit(inputMoney);
-	cout << "입금완료.";
+	return Deposit();
 }
 
 void AccountHandler::Withdraw()
@@ -163,28 +159,26 @@ void AccountHandler::Withdraw()
 	cin >> inputID;
 	for(i = 0; i < accountNum; i++) {
 		if(accountList[i]->GetAccID() == inputID) {
-			break;
+			cout << "이 름: " << accountList[i]->GetName() << '\n';
+			cout << "출금액(현재 잔액: " << accountList[i]->GetBalance() << "원): ";
+			cin >> inputMoney;
+			if(accountList[i]->GetBalance() >= inputMoney) {
+				accountList[i]->Withdraw(inputMoney);
+			}
+			else {
+				cout << "잔액이 부족합니다.(현재 잔액: " << accountList[i]->GetBalance() << "원)\n";
+				cout << "출금실패.\n";
+				return;
+			}
+			cout << "출금완료.\n";
+			return;
 		}
 	}
-	if(i == accountNum) {
-		cout << "올바른 계좌번호가 아닙니다.\n";
-		for(int i = 0; i < accountNum; i++) {
-			cout << "계좌ID: " << accountList[i]->GetAccID() << '\n';
-		}
-		return Deposit();
+	cout << "올바른 계좌번호가 아닙니다.\n";
+	for(int i = 0; i < accountNum; i++) {
+		cout << "계좌ID: " << accountList[i]->GetAccID() << '\n';
 	}
-	cout << "이 름: " << accountList[i]->GetName() << '\n';
-	cout << "출금액(현재 잔액: " << accountList[i]->GetBalance() << "원): ";
-	cin >> inputMoney;
-	if(accountList[i]->GetBalance() >= inputMoney) {
-		accountList[i]->Withdraw(inputMoney);
-	}
-	else {
-		cout << "잔액이 부족합니다.(현재 잔액: " << accountList[i]->GetBalance() << "원)\n";
-		cout << "출금실패.\n";
-		return;
-	}
-	cout << "출금완료.\n";
+	return Deposit();
 }
 
 void AccountHandler::ShowAccountList () const
@@ -199,13 +193,13 @@ void AccountHandler::ShowAccountList () const
 int main()
 {
 	AccountHandler manager;
-	manager.customAccout(111, "name1", 500);
-	manager.customAccout(112, "name2", 1000);
-	manager.customAccout(113, "name3", 5000);
+	manager.customAccount(111, "name1", 500);
+	manager.customAccount(112, "name2", 1000);
+	manager.customAccount(113, "name3", 5000);
 	while(true) {
 		switch(manager.ShowMenu()) {
 		case CREATE:
-			manager.CreateAccout();
+			manager.CreateAccount();
 			break;
 		case DEPOSIT:
 			manager.Deposit();
